@@ -11,6 +11,22 @@ let frameCount = 0;
 let lastTime = performance.now();
 let fps = 0;
 
+
+// Create WebSocket connection.
+const socket = new WebSocket("ws://localhost:8080");
+
+// Connection opened
+socket.addEventListener("open", (event) => {
+    socket.send("Hello Server!");
+});
+
+// Listen for messages
+socket.addEventListener("message", (event) => {
+    console.log("Message from server ", event.data);
+});
+
+
+
 class Rectangle {
     constructor(x, y, color) {
         this.x = x;
