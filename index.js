@@ -12,7 +12,7 @@ let lastTime = performance.now();
 let fps = 0;
 
 // Create WebSocket connection.
-const socket = new WebSocket("ws://localhost:8080/ws");
+const socket = new WebSocket("wss://localhost:8080/ws");
 
 // Connection opened
 socket.addEventListener("open", (event) => {
