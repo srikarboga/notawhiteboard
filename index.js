@@ -12,16 +12,22 @@ let lastTime = performance.now();
 let fps = 0;
 
 // Create WebSocket connection.
-const socket = new WebSocket("ws://localhost:8080");
+const socket = new WebSocket("ws://localhost:8080/ws");
 
 // Connection opened
 socket.addEventListener("open", (event) => {
-    socket.send("Hello Server!");
+    //socket.send("Hello Server!");
 });
 
 // Listen for messages
 socket.addEventListener("message", (event) => {
-    console.log("Message from server ", event.data);
+    if (event.data === "Hello from Go Server!") {
+        console.log("Received hello");
+    } else {
+        data = JSON.parse(event.data);
+        console.log("Message from server ", data);
+        rectangles = data;
+    }
 });
 
 class Rectangle {
@@ -30,18 +36,18 @@ class Rectangle {
         this.y = y;
         this.color = color;
     }
+}
 
-    draw() {
-        ctx.fillStyle = this.color;
-        ctx.beginPath();
-        ctx.roundRect(this.x - rectSize / 2, this.y - rectSize / 2, rectSize, rectSize, rectSize / 5);
-        ctx.fill();
-    }
+function isPointInside(x, y, rect) {
+    return (x >= rect.x - rectSize / 2 && x <= rect.x + rectSize / 2 &&
+        y >= rect.y - rectSize / 2 && y <= rect.y + rectSize / 2);
+}
 
-    isPointInside(x, y) {
-        return (x >= this.x - rectSize / 2 && x <= this.x + rectSize / 2 &&
-            y >= this.y - rectSize / 2 && y <= this.y + rectSize / 2);
-    }
+function draw(rect) {
+    ctx.fillStyle = rect.color;
+    ctx.beginPath();
+    ctx.roundRect(rect.x - rectSize / 2, rect.y - rectSize / 2, rectSize, rectSize, rectSize / 5);
+    ctx.fill();
 }
 
 function drawRectangles() {
@@ -57,7 +63,9 @@ function drawRectangles() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     // Draw rectangles
-    rectangles.forEach(rect => rect.draw());
+    if (rectangles.length > 0) {
+        rectangles.forEach(rect => draw(rect));
+    }
 
     // Draw FPS counter
     ctx.fillStyle = 'white';
@@ -83,7 +91,7 @@ function addRectangle(x, y) {
 }
 
 function removeRectangle(x, y) {
-    rectangles = rectangles.filter(rect => !rect.isPointInside(x, y));
+    rectangles = rectangles.filter(rect => !isPointInside(x, y, rect));
 }
 
 function getMousePos(e) {
@@ -98,7 +106,7 @@ canvas.addEventListener('mousedown', function(e) {
     const pos = getMousePos(e);
     if (e.button === 0) { // Left click
         for (let i = rectangles.length - 1; i >= 0; i--) {
-            if (rectangles[i].isPointInside(pos.x, pos.y)) {
+            if (isPointInside(pos.x, pos.y, rectangles[i])) {
                 isDragging = true;
                 dragIndex = i;
                 dragOffsetX = pos.x - rectangles[i].x;
@@ -123,6 +131,20 @@ canvas.addEventListener('mousemove', function(e) {
 canvas.addEventListener('mouseup', function() {
     isDragging = false;
     dragIndex = -1;
+
+    //send a message to the server with the current state
+    socket.send(JSON.stringify(rectangles));
+
+});
+
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'r' || e.key == 'R') {
+        isDragging = false;
+        dragIndex = -1;
+        rectangles = [];
+        //send a message to the server with the current state
+        socket.send(JSON.stringify(rectangles));
+    }
 });
 
 canvas.addEventListener('contextmenu', function(e) {
