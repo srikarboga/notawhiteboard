@@ -1,3 +1,4 @@
+"use strict";
 /** @type {HTMLCanvasElement} */
 const canvas = document.getElementById('Canvas');
 const ctx = canvas.getContext('2d');
