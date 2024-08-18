@@ -2,10 +2,12 @@ package main
 
 import (
 	"fmt"
-	"golang.org/x/net/websocket"
 	"log"
 	"net/http"
+	"strings"
 	"sync"
+
+	"golang.org/x/net/websocket"
 )
 
 var (
@@ -44,7 +46,14 @@ func handleWebSocket(ws *websocket.Conn) {
 	clients[ws] = struct{}{}
 	clientsMu.Unlock()
 
-	remoteAddr := ws.Request().RemoteAddr
+	remoteAddr := ws.Request().Header.Get("X-Forwarded-For")
+	//validation remoteAddr
+	if remoteAddr == "" {
+		remoteAddr = ws.Request().RemoteAddr
+	} else {
+		remoteAddr = strings.Split(remoteAddr, ",")[0]
+	}
+
 	fmt.Println("New connection from:", remoteAddr)
 
 	response := "Hello from Go Server!"

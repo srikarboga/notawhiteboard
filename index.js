@@ -13,7 +13,7 @@ let lastTime = performance.now();
 let fps = 0;
 
 // Create WebSocket connection.
-const socket = new WebSocket("wss://localhost:8080/ws");
+const socket = new WebSocket("ws://localhost:8080/ws");
 
 // Connection opened
 socket.addEventListener("open", (event) => {
@@ -25,8 +25,12 @@ socket.addEventListener("message", (event) => {
     if (event.data === "Hello from Go Server!") {
         console.log("Received hello");
     } else {
-        data = JSON.parse(event.data);
-        console.log("Message from server ", data);
+        let data = JSON.parse(event.data);
+        //console log the size of the data
+        const encoder = new TextEncoder();
+        const byteArray = encoder.encode(data);
+        const datasize = byteArray.length;
+        console.log("Message from server ", datasize, data);
         rectangles = data;
     }
 });
