@@ -11,10 +11,12 @@ import (
 )
 
 var (
-	state     string
-	mu        sync.Mutex
-	clients   = make(map[*websocket.Conn]struct{})
-	clientsMu sync.Mutex
+	state         string
+	mu            sync.Mutex
+	clients       = make(map[*websocket.Conn]struct{})
+	clientsMu     sync.Mutex
+	bytesSent     int
+	bytesReceived int
 )
 
 func main() {
@@ -30,14 +32,20 @@ func main() {
 func broadcastUpdate() {
 	clientsMu.Lock()
 	defer clientsMu.Unlock()
+	fmt.Println("Clients: ", len(clients))
 	for client := range clients {
 		// Send updated state to the client
+		bytes := len([]byte(state))
+		bytesSent += bytes
 		if err := websocket.Message.Send(client, state); err != nil {
 			log.Println("Error sending message:", err)
 			client.Close()          // Close the connection if sending fails
 			delete(clients, client) // Remove client from the map
 		}
 	}
+	fmt.Println("bytes received: ", bytesReceived)
+	fmt.Println("bytes sent: ", bytesSent)
+	fmt.Println()
 }
 
 // handleWebSocket handles WebSocket connections.
@@ -64,10 +72,13 @@ func handleWebSocket(ws *websocket.Conn) {
 
 	if len(state) > 0 {
 		initialState := state
+		bytes := len([]byte(state))
+		bytesSent += bytes
 		if err := websocket.Message.Send(ws, initialState); err != nil {
 			log.Println("Error sending message:", err)
 			return
 		}
+
 	}
 
 	go func() {
@@ -79,12 +90,16 @@ func handleWebSocket(ws *websocket.Conn) {
 					clientsMu.Lock()
 					delete(clients, ws)
 					clientsMu.Unlock()
+					ws.Close()
 					return
 				}
 				log.Println("Error receiving message:", err)
 				break
 			}
-			fmt.Println("Received message from:", remoteAddr)
+			bytes := len([]byte(msg))
+			bytesReceived += bytes
+
+			fmt.Println("Received message of size ", bytes, " from:", remoteAddr)
 
 			mu.Lock()
 			state = msg

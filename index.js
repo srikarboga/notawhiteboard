@@ -11,29 +11,54 @@ let dragOffsetY = 0;
 let frameCount = 0;
 let lastTime = performance.now();
 let fps = 0;
+let reconnectTime = 2500;
+let totalSent = 0;
+let totalReceived = 0;
+
 
 // Create WebSocket connection.
-const socket = new WebSocket("ws://localhost:8080/ws");
+let ws;
 
-// Connection opened
-socket.addEventListener("open", (event) => {
-    //socket.send("Hello Server!");
-});
+createWS();
 
-// Listen for messages
-socket.addEventListener("message", (event) => {
-    if (event.data === "Hello from Go Server!") {
-        console.log("Received hello");
-    } else {
-        let data = JSON.parse(event.data);
-        //console log the size of the data
-        const encoder = new TextEncoder();
-        const byteArray = encoder.encode(data);
-        const datasize = byteArray.length;
-        console.log("Message from server ", datasize, data);
-        rectangles = data;
+function createWS() {
+    ws = new WebSocket("ws://localhost:8080/ws")
+
+    function reconnect() {
+        ws = new WebSocket("ws://localhost:8080/ws");
     }
-});
+
+    ws.onopen = (event) => {
+        //socket.send("Hello Server!");
+    };
+
+    ws.onerror = (event) => {
+        console.log("eorrr");
+        setTimeout(createWS, reconnectTime);
+    };
+
+    ws.onclose = (event) => {
+        console.log("colseing");
+        //setTimeout(createWS, reconnectTime);
+    };
+
+    // Listen for messages
+    ws.onmessage = (event) => {
+        if (event.data === "Hello from Go Server!") {
+            console.log("Received hello");
+        } else {
+            let data = event.data;
+
+            const bytes = new TextEncoder().encode(data).length;
+            totalReceived += bytes;
+
+            //console log the size of the data
+            console.log("Message from server ", bytes);
+            data = JSON.parse(data);
+            rectangles = data;
+        }
+    };
+}
 
 class Rectangle {
     constructor(x, y, color) {
@@ -76,6 +101,8 @@ function drawRectangles() {
     ctx.fillStyle = 'white';
     ctx.font = '16px Arial';
     ctx.fillText(`FPS: ${fps}`, 10, 30);
+    ctx.fillText(`Bytes sent: ${totalSent}`, 10, 50);
+    ctx.fillText(`Bytes received: ${totalReceived}`, 10, 70);
 
     // Request the next animation frame
     window.requestAnimationFrame(drawRectangles);
@@ -137,8 +164,19 @@ canvas.addEventListener('mouseup', function() {
     isDragging = false;
     dragIndex = -1;
 
+    let data = JSON.stringify(rectangles);
     //send a message to the server with the current state
-    socket.send(JSON.stringify(rectangles));
+    if (ws.readyState === WebSocket.OPEN) {
+        ws.send(data);
+        const bytes = new TextEncoder().encode(data).length;
+        totalSent += bytes;
+    } else {
+        console.log("websocket not working gonna try to reconnect");
+        createWS();
+        setTimeout(() => { ws.send(data); }, reconnectTime);
+        const bytes = new TextEncoder().encode(data).length;
+        totalSent += bytes;
+    }
 
 });
 
@@ -148,7 +186,11 @@ document.addEventListener('keydown', function(e) {
         dragIndex = -1;
         rectangles = [];
         //send a message to the server with the current state
-        socket.send(JSON.stringify(rectangles));
+        let data = JSON.stringify(rectangles);
+        ws.send(data);
+        const bytes = new TextEncoder().encode(data).length;
+        totalSent += bytes;
+        console.log("Reset: ", data);
     }
 });
 
