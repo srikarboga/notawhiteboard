@@ -24,9 +24,9 @@ createWS();
 function createWS() {
     ws = new WebSocket("ws://localhost:8080/ws")
 
-    function reconnect() {
+    /* function reconnect() {
         ws = new WebSocket("ws://localhost:8080/ws");
-    }
+    } */
 
     ws.onopen = (event) => {
         //socket.send("Hello Server!");
@@ -38,7 +38,7 @@ function createWS() {
     };
 
     ws.onclose = (event) => {
-        console.log("colseing");
+        console.log("colsing");
         //setTimeout(createWS, reconnectTime);
     };
 

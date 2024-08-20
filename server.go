@@ -78,7 +78,6 @@ func handleWebSocket(ws *websocket.Conn) {
 			log.Println("Error sending message:", err)
 			return
 		}
-
 	}
 
 	go func() {
