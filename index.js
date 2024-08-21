@@ -2,7 +2,7 @@
 /** @type {HTMLCanvasElement} */
 const canvas = document.getElementById('Canvas');
 const ctx = canvas.getContext('2d');
-let rectangles = [];
+let rectangles = new Map();
 const rectSize = 20;
 let isDragging = false;
 let dragIndex = -1;
@@ -16,6 +16,7 @@ let totalSent = 0;
 let totalReceived = 0;
 let conStatus;
 let stale;
+let currId = 0;
 
 
 // Create WebSocket connection.
@@ -65,8 +66,8 @@ function createWS() {
 
             //console log the size of the data
             console.log("Message from server ", bytes, [event.data]);
-            data = JSON.parse(data);
-            rectangles = data;
+            //data = JSON.parse(data);
+            //rectangles = data;
         }
     };
 
@@ -74,9 +75,10 @@ function createWS() {
 }
 
 class Rectangle {
-    constructor(x, y, color) {
+    constructor(x, y, color, id) {
         this.x = x;
         this.y = y;
+        this.id = id;
         this.color = color;
     }
 }
@@ -106,8 +108,8 @@ function drawRectangles() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     // Draw rectangles
-    if (rectangles.length > 0) {
-        rectangles.forEach(rect => draw(rect));
+    if (rectangles.size > 0) {
+        rectangles.values().forEach(rect => draw(rect));
     }
     switch (ws.readyState) {
         case WebSocket.CONNECTING:
@@ -129,6 +131,7 @@ function drawRectangles() {
     ctx.fillText(`Bytes received: ${totalReceived}`, 10, 70);
     ctx.fillText(`Connection status: ${conStatus}`, 10, 90);
 
+
     // Request the next animation frame
     window.requestAnimationFrame(drawRectangles);
 }
@@ -142,13 +145,22 @@ function resizeCanvas() {
 const randomHsl = () => `hsla(${Math.random() * 360}, 100%, 50%, 1)`;
 
 function addRectangle(x, y) {
-    rectangles.push(new Rectangle(x, y, randomHsl()));
+    let currRect = new Rectangle(x, y, randomHsl(), currId);
+    rectangles.set(currId, currRect);
+    currId++;
     dragIndex = rectangles.length - 1;
     isDragging = true;
+    ws.send(currRect);
+    console.log(rectangles);
 }
 
 function removeRectangle(x, y) {
-    rectangles = rectangles.filter(rect => !isPointInside(x, y, rect));
+    let recttoremove = rectangles.values().find(rect => isPointInside(x, y, rect));
+    /* console.log(isPointInside(x, y, recttoremove));
+    console.log(recttoremove); */
+    if (recttoremove) {
+        rectangles.delete(recttoremove.id);
+    }
 }
 
 function getMousePos(e) {
@@ -178,11 +190,11 @@ canvas.addEventListener('mousedown', function(e) {
 });
 
 canvas.addEventListener('mousemove', function(e) {
-    if (isDragging) {
+    /* if (isDragging) {
         const pos = getMousePos(e);
         rectangles[dragIndex].x = pos.x - dragOffsetX;
         rectangles[dragIndex].y = pos.y - dragOffsetY;
-    }
+    } */
 });
 
 canvas.addEventListener('mouseup', function() {
@@ -194,7 +206,7 @@ canvas.addEventListener('mouseup', function() {
     //console.log(ws.readyState == WebSocket.OPEN);
     if (ws.readyState === WebSocket.OPEN) {
         stale = false;
-        ws.send(data);
+        //ws.send(data);
         const bytes = new TextEncoder().encode(data).length;
         totalSent += bytes;
     } else if (ws.readyState === WebSocket.CLOSED) {
@@ -209,7 +221,7 @@ document.addEventListener('keydown', function(e) {
     if (e.key === 'r' || e.key == 'R') {
         isDragging = false;
         dragIndex = -1;
-        rectangles = [];
+        rectangles = new Map();
         //send a message to the server with the current state
         let data = JSON.stringify(rectangles);
         ws.send(data);
