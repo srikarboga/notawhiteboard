@@ -14,15 +14,20 @@ let fps = 0;
 let reconnectTime = 2500;
 let totalSent = 0;
 let totalReceived = 0;
+let conStatus;
+let stale;
 
 
 // Create WebSocket connection.
-let ws;
-
-createWS();
+let ws = createWS();
 
 function createWS() {
-    ws = new WebSocket("ws://localhost:8080/ws")
+    let ws;
+    try {
+        ws = new WebSocket("ws://localhost:8080/ws")
+    } catch (error) {
+        console.log("Websocket connection failed")
+    }
 
     /* function reconnect() {
         ws = new WebSocket("ws://localhost:8080/ws");
@@ -30,15 +35,21 @@ function createWS() {
 
     ws.onopen = (event) => {
         //socket.send("Hello Server!");
+        /*  if (rectangles.length > 0 && stale) {
+             let data = JSON.stringify(rectangles);
+             ws.send(data);
+             const bytes = new TextEncoder().encode(data).length;
+             totalSent += bytes;
+         } */
     };
 
     ws.onerror = (event) => {
-        console.log("eorrr");
-        setTimeout(createWS, reconnectTime);
+        console.log("error", event);
+        //setTimeout(createWS, reconnectTime);
     };
 
     ws.onclose = (event) => {
-        console.log("colsing");
+        console.log("closing", event);
         //setTimeout(createWS, reconnectTime);
     };
 
@@ -53,11 +64,13 @@ function createWS() {
             totalReceived += bytes;
 
             //console log the size of the data
-            console.log("Message from server ", bytes);
+            console.log("Message from server ", bytes, [event.data]);
             data = JSON.parse(data);
             rectangles = data;
         }
     };
+
+    return ws;
 }
 
 class Rectangle {
@@ -96,6 +109,17 @@ function drawRectangles() {
     if (rectangles.length > 0) {
         rectangles.forEach(rect => draw(rect));
     }
+    switch (ws.readyState) {
+        case WebSocket.CONNECTING:
+            conStatus = 'Connecting...';
+            break;
+        case WebSocket.OPEN:
+            conStatus = 'Online';
+            break;
+        case WebSocket.CLOSED:
+            conStatus = 'Offline';
+            break;
+    }
 
     // Draw FPS counter
     ctx.fillStyle = 'white';
@@ -103,6 +127,7 @@ function drawRectangles() {
     ctx.fillText(`FPS: ${fps}`, 10, 30);
     ctx.fillText(`Bytes sent: ${totalSent}`, 10, 50);
     ctx.fillText(`Bytes received: ${totalReceived}`, 10, 70);
+    ctx.fillText(`Connection status: ${conStatus}`, 10, 90);
 
     // Request the next animation frame
     window.requestAnimationFrame(drawRectangles);
@@ -166,16 +191,16 @@ canvas.addEventListener('mouseup', function() {
 
     let data = JSON.stringify(rectangles);
     //send a message to the server with the current state
+    //console.log(ws.readyState == WebSocket.OPEN);
     if (ws.readyState === WebSocket.OPEN) {
+        stale = false;
         ws.send(data);
         const bytes = new TextEncoder().encode(data).length;
         totalSent += bytes;
-    } else {
+    } else if (ws.readyState === WebSocket.CLOSED) {
+        stale = true;
         console.log("websocket not working gonna try to reconnect");
-        createWS();
-        setTimeout(() => { ws.send(data); }, reconnectTime);
-        const bytes = new TextEncoder().encode(data).length;
-        totalSent += bytes;
+        ws = createWS();
     }
 
 });
