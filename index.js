@@ -148,10 +148,10 @@ function addRectangle(x, y) {
     let currRect = new Rectangle(x, y, randomHsl(), currId);
     rectangles.set(currId, currRect);
     currId++;
-    dragIndex = rectangles.length - 1;
+    dragIndex = currRect.id;
     isDragging = true;
-    ws.send(currRect);
-    console.log(rectangles);
+    // ws.send(currRect);
+    // console.log(rectangles);
 }
 
 function removeRectangle(x, y) {
@@ -174,7 +174,7 @@ function getMousePos(e) {
 canvas.addEventListener('mousedown', function(e) {
     const pos = getMousePos(e);
     if (e.button === 0) { // Left click
-        for (let i = rectangles.length - 1; i >= 0; i--) {
+        /* for (let i = rectangles.length - 1; i >= 0; i--) {
             if (isPointInside(pos.x, pos.y, rectangles[i])) {
                 isDragging = true;
                 dragIndex = i;
@@ -182,6 +182,17 @@ canvas.addEventListener('mousedown', function(e) {
                 dragOffsetY = pos.y - rectangles[i].y;
                 return;
             }
+        } */
+        let recttodrag = rectangles.values().find(rect => isPointInside(pos.x, pos.y, rect));
+
+        // console.log("here", recttodrag);
+        if (recttodrag) {
+            // console.log("here", recttodrag);
+            isDragging = true;
+            dragIndex = recttodrag.id;
+            dragOffsetX = pos.x - recttodrag.x;
+            dragOffsetY = pos.y - recttodrag.y;
+            return;
         }
         addRectangle(pos.x, pos.y);
     } else if (e.button === 2) { // Right click
@@ -190,23 +201,23 @@ canvas.addEventListener('mousedown', function(e) {
 });
 
 canvas.addEventListener('mousemove', function(e) {
-    /* if (isDragging) {
+    if (isDragging) {
         const pos = getMousePos(e);
-        rectangles[dragIndex].x = pos.x - dragOffsetX;
-        rectangles[dragIndex].y = pos.y - dragOffsetY;
-    } */
+        rectangles.get(dragIndex).x = pos.x - dragOffsetX;
+        rectangles.get(dragIndex).y = pos.y - dragOffsetY;
+    }
 });
 
 canvas.addEventListener('mouseup', function() {
     isDragging = false;
     dragIndex = -1;
 
-    let data = JSON.stringify(rectangles);
+    let data = rectangles;
     //send a message to the server with the current state
     //console.log(ws.readyState == WebSocket.OPEN);
     if (ws.readyState === WebSocket.OPEN) {
         stale = false;
-        //ws.send(data);
+        ws.send(data);
         const bytes = new TextEncoder().encode(data).length;
         totalSent += bytes;
     } else if (ws.readyState === WebSocket.CLOSED) {
