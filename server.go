@@ -1,6 +1,7 @@
 package main
 
 import (
+	// "encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -17,7 +18,20 @@ var (
 	clientsMu     sync.Mutex
 	bytesSent     int
 	bytesReceived int
+	rectangles    []Rectangle
 )
+
+type Rectangle struct {
+	X     float64 `json:"x"`
+	Y     float64 `json:"y"`
+	Color string  `json:"color"`
+	ID    int64   `json:"id"`
+}
+
+type Msg struct {
+	Type string    `json:"type"`
+	Rect Rectangle `json:"rect"`
+}
 
 func main() {
 	http.Handle("/ws", websocket.Handler(handleWebSocket))
@@ -64,13 +78,16 @@ func handleWebSocket(ws *websocket.Conn) {
 
 	fmt.Println("New connection from:", remoteAddr)
 
+	//Sending a greeting from the server to new clients
 	response := "Hello from Go Server!"
 	if err := websocket.Message.Send(ws, response); err != nil {
 		log.Println("Error sending message:", err)
 		return
 	}
 
-	if len(state) > 0 {
+	//Sending current state to new clients that joined
+
+	/* 	if len(state) > 0 {
 		initialState := state
 		bytes := len([]byte(state))
 		bytesSent += bytes
@@ -78,12 +95,12 @@ func handleWebSocket(ws *websocket.Conn) {
 			log.Println("Error sending message:", err)
 			return
 		}
-	}
+	} */
 
 	go func() {
 		for {
-			var msg string
-			if err := websocket.Message.Receive(ws, &msg); err != nil {
+			var msg Msg
+			if err := websocket.JSON.Receive(ws, &msg); err != nil {
 				if err.Error() == "EOF" {
 					fmt.Println("Connection closed.")
 					clientsMu.Lock()
@@ -95,13 +112,22 @@ func handleWebSocket(ws *websocket.Conn) {
 				log.Println("Error receiving message:", err)
 				break
 			}
-			bytes := len([]byte(msg))
-			bytesReceived += bytes
+			/* bytes := len([]byte(msg))
+			bytesReceived += bytes */
 
-			fmt.Println("Received message of size ", bytes, " from:", remoteAddr)
+			fmt.Println("Received message of size " /* , bytes */, " from:", remoteAddr, msg)
+
+			//old code for unmarshaling json data that is replaced by using websocket.JSON.Receive
+			/* var message Msg
+			if err := json.Unmarshal([]byte(msg), &message); err != nil {
+				log.Println("Error decoding JSON:", err)
+				return
+			} */
+
+			fmt.Println(msg)
 
 			mu.Lock()
-			state = msg
+			//state = msg
 			mu.Unlock()
 			broadcastUpdate()
 		}

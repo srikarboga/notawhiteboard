@@ -83,6 +83,13 @@ class Rectangle {
     }
 }
 
+class Msg {
+    constructor(type, rect) {
+        this.type = type;
+        this.rect = rect;
+    }
+}
+
 function isPointInside(x, y, rect) {
     return (x >= rect.x - rectSize / 2 && x <= rect.x + rectSize / 2 &&
         y >= rect.y - rectSize / 2 && y <= rect.y + rectSize / 2);
@@ -150,8 +157,11 @@ function addRectangle(x, y) {
     currId++;
     dragIndex = currRect.id;
     isDragging = true;
-    // ws.send(currRect);
-    // console.log(rectangles);
+
+    let data = JSON.stringify(new Msg("add", currRect));
+    ws.send(data);
+    console.log(data);
+    //TODO add byte tracking here
 }
 
 function removeRectangle(x, y) {
@@ -215,7 +225,7 @@ canvas.addEventListener('mouseup', function() {
     let data = rectangles;
     //send a message to the server with the current state
     //console.log(ws.readyState == WebSocket.OPEN);
-    if (ws.readyState === WebSocket.OPEN) {
+    /* if (ws.readyState === WebSocket.OPEN) {
         stale = false;
         ws.send(data);
         const bytes = new TextEncoder().encode(data).length;
@@ -224,7 +234,7 @@ canvas.addEventListener('mouseup', function() {
         stale = true;
         console.log("websocket not working gonna try to reconnect");
         ws = createWS();
-    }
+    } */
 
 });
 
