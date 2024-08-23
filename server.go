@@ -43,7 +43,7 @@ func main() {
 	}
 }
 
-func broadcastUpdate() {
+func broadcastUpdate(msg Msg) {
 	clientsMu.Lock()
 	defer clientsMu.Unlock()
 	fmt.Println("Clients: ", len(clients))
@@ -51,7 +51,7 @@ func broadcastUpdate() {
 		// Send updated state to the client
 		bytes := len([]byte(state))
 		bytesSent += bytes
-		if err := websocket.Message.Send(client, state); err != nil {
+		if err := websocket.JSON.Send(client, msg); err != nil {
 			log.Println("Error sending message:", err)
 			client.Close()          // Close the connection if sending fails
 			delete(clients, client) // Remove client from the map
@@ -115,7 +115,7 @@ func handleWebSocket(ws *websocket.Conn) {
 			/* bytes := len([]byte(msg))
 			bytesReceived += bytes */
 
-			fmt.Println("Received message of size " /* , bytes */, " from:", remoteAddr, msg)
+			fmt.Println("Received message of size " /* , bytes */, " from:", remoteAddr, "\n", msg)
 
 			//old code for unmarshaling json data that is replaced by using websocket.JSON.Receive
 			/* var message Msg
@@ -124,12 +124,14 @@ func handleWebSocket(ws *websocket.Conn) {
 				return
 			} */
 
-			fmt.Println(msg)
-
+			//updating current state
 			mu.Lock()
 			//state = msg
+			rectangles = append(rectangles, msg.Rect)
 			mu.Unlock()
-			broadcastUpdate()
+
+			//broadcast current state to every client
+			broadcastUpdate(msg)
 		}
 	}()
 

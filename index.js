@@ -59,13 +59,13 @@ function createWS() {
         if (event.data === "Hello from Go Server!") {
             console.log("Received hello");
         } else {
-            let data = event.data;
+            let data = JSON.parse(event.data);
 
             const bytes = new TextEncoder().encode(data).length;
             totalReceived += bytes;
 
             //console log the size of the data
-            console.log("Message from server ", bytes, [event.data]);
+            console.log("Message from server ", bytes, [data]);
             //data = JSON.parse(data);
             //rectangles = data;
         }
