@@ -115,7 +115,22 @@ func handleWebSocket(ws *websocket.Conn) {
 			/* bytes := len([]byte(msg))
 			bytesReceived += bytes */
 
-			fmt.Println("Received message of size " /* , bytes */, " from:", remoteAddr, "\n", msg)
+			fmt.Println("Received message of size " /* , bytes */, " from:", remoteAddr, " Type: ", msg.Type, "\n", msg)
+			switch msg.Type {
+			case "add":
+				//todo
+				mu.Lock()
+				rectangles = append(rectangles, msg.Rect)
+				mu.Unlock()
+				fmt.Println(rectangles)
+			case "del":
+				//todo:
+			case "move":
+				//todo
+			case "clear":
+				//todo
+
+			}
 
 			//old code for unmarshaling json data that is replaced by using websocket.JSON.Receive
 			/* var message Msg
@@ -125,10 +140,10 @@ func handleWebSocket(ws *websocket.Conn) {
 			} */
 
 			//updating current state
-			mu.Lock()
+			// mu.Lock()
 			//state = msg
-			rectangles = append(rectangles, msg.Rect)
-			mu.Unlock()
+			// rectangles = append(rectangles, msg.Rect)
+			// mu.Unlock()
 
 			//broadcast current state to every client
 			broadcastUpdate(msg)
