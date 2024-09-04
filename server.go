@@ -18,7 +18,7 @@ var (
 	clientsMu     sync.Mutex
 	bytesSent     int
 	bytesReceived int
-	rectangles    []Rectangle
+	rectangles    = make(map[int64]Rectangle)
 )
 
 type Rectangle struct {
@@ -118,18 +118,23 @@ func handleWebSocket(ws *websocket.Conn) {
 			fmt.Println("Received message of size " /* , bytes */, " from:", remoteAddr, " Type: ", msg.Type, "\n", msg)
 			switch msg.Type {
 			case "add":
-				//todo
 				mu.Lock()
-				rectangles = append(rectangles, msg.Rect)
+				rectangles[msg.Rect.ID] = msg.Rect
 				mu.Unlock()
 				fmt.Println(rectangles)
 			case "del":
-				//todo:
+				mu.Lock()
+				delete(rectangles, msg.Rect.ID)
+				mu.Unlock()
+				fmt.Println(rectangles)
 			case "move":
-				//todo
+				mu.Lock()
+				rectangles[msg.Rect.ID] = msg.Rect
+				mu.Unlock()
+				fmt.Println(rectangles)
 			case "clear":
-				//todo
-
+				clear(rectangles)
+				fmt.Println(rectangles)
 			}
 
 			//old code for unmarshaling json data that is replaced by using websocket.JSON.Receive

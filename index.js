@@ -70,6 +70,7 @@ function createWS() {
             //rectangles = data;
 
             console.log("received", data.type);
+            //TODO update client state based on server msg
         }
     };
 
@@ -184,6 +185,8 @@ function removeRectangle(x, y) {
         rectangles.delete(recttoremove.id);
     }
     //todo send del here
+    let data = JSON.stringify(new Msg("del", recttoremove));
+    ws.send(data);
     console.log("sent del");
 }
 
@@ -241,6 +244,8 @@ canvas.addEventListener("mousemove", function(e) {
 canvas.addEventListener("mouseup", function() {
     if (isDragging && moved) {
         //send the rect to the server that was dragged using msg type "move"
+        let data = JSON.stringify(new Msg("move", rectangles.get(dragIndex)));
+        ws.send(data);
         console.log("sent move");
     }
 
@@ -269,10 +274,14 @@ document.addEventListener("keydown", function(e) {
         dragIndex = -1;
         rectangles = new Map();
         //send a message to the server with the current state
-        let data = JSON.stringify(rectangles);
-        ws.send(data);
+        /* let data = JSON.stringify(rectangles);
+        ws.send(data); */
         const bytes = new TextEncoder().encode(data).length;
         totalSent += bytes;
+
+
+        /* let data = JSON.stringify(new Msg("clear"));
+        ws.send(data); */
         console.log("sent clear");
     }
 });
