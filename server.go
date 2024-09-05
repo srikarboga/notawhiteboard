@@ -18,14 +18,14 @@ var (
 	clientsMu     sync.Mutex
 	bytesSent     int
 	bytesReceived int
-	rectangles    = make(map[int64]Rectangle)
+	rectangles    = make(map[string]Rectangle)
 )
 
 type Rectangle struct {
 	X     float64 `json:"x"`
 	Y     float64 `json:"y"`
 	Color string  `json:"color"`
-	ID    int64   `json:"id"`
+	ID    string  `json:"id"`
 }
 
 type Msg struct {

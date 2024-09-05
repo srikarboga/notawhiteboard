@@ -71,7 +71,7 @@ function createWS() {
 
             console.log("received", data.type);
             //TODO update client state based on server msg
-            switch(data.type){
+            switch (data.type) {
                 case "add":
                     console.log(data);
                     rectangles.set(data.rect.id, data.rect);
@@ -185,9 +185,10 @@ function resizeCanvas() {
 const randomHsl = () => `hsla(${Math.random() * 360}, 100%, 50%, 1)`;
 
 function addRectangle(x, y) {
-    let currRect = new Rectangle(x, y, randomHsl(), currId);
-    rectangles.set(currId, currRect);
-    currId++;
+    let uuid = crypto.randomUUID();
+    // console.log(uuid);
+    let currRect = new Rectangle(x, y, randomHsl(), uuid);
+    rectangles.set(uuid, currRect);
     dragIndex = currRect.id;
     isDragging = true;
 
