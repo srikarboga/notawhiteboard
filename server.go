@@ -33,6 +33,11 @@ type Msg struct {
 	Rect Rectangle `json:"rect"`
 }
 
+type InitialMsg struct {
+	Type       string               `json:"type"`
+	Rectangles map[string]Rectangle `json:"rectangles"`
+}
+
 func main() {
 	http.Handle("/ws", websocket.Handler(handleWebSocket))
 
@@ -81,6 +86,15 @@ func handleWebSocket(ws *websocket.Conn) {
 	//Sending a greeting from the server to new clients
 	response := "Hello from Go Server!"
 	if err := websocket.Message.Send(ws, response); err != nil {
+		log.Println("Error sending message:", err)
+		return
+	}
+
+	initialmsg := InitialMsg{
+		Type:       "initial",
+		Rectangles: rectangles,
+	}
+	if err := websocket.JSON.Send(ws, initialmsg); err != nil {
 		log.Println("Error sending message:", err)
 		return
 	}
