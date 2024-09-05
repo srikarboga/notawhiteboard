@@ -71,6 +71,28 @@ function createWS() {
 
             console.log("received", data.type);
             //TODO update client state based on server msg
+            switch(data.type){
+                case "add":
+                    console.log(data);
+                    rectangles.set(data.rect.id, data.rect);
+                    console.log(rectangles);
+                    break;
+                case "move":
+                    console.log(data);
+                    rectangles.set(data.rect.id, data.rect);
+                    console.log(rectangles);
+                    break;
+                case "del":
+                    console.log(data);
+                    rectangles.set(data.rect.id, data.rect);
+                    console.log(rectangles);
+                    break;
+                case "clear":
+                    console.log(data);
+                    rectangles = new Map();
+                    console.log(rectangles);
+                    break;
+            }
         }
     };
 
