@@ -135,20 +135,20 @@ func handleWebSocket(ws *websocket.Conn) {
 				mu.Lock()
 				rectangles[msg.Rect.ID] = msg.Rect
 				mu.Unlock()
-				fmt.Println(rectangles)
+				// fmt.Println(rectangles)
 			case "del":
 				mu.Lock()
 				delete(rectangles, msg.Rect.ID)
 				mu.Unlock()
-				fmt.Println(rectangles)
+				// fmt.Println(rectangles)
 			case "move":
 				mu.Lock()
 				rectangles[msg.Rect.ID] = msg.Rect
 				mu.Unlock()
-				fmt.Println(rectangles)
+				// fmt.Println(rectangles)
 			case "clear":
 				clear(rectangles)
-				fmt.Println(rectangles)
+				// fmt.Println(rectangles)
 			}
 
 			//old code for unmarshaling json data that is replaced by using websocket.JSON.Receive
