@@ -84,7 +84,7 @@ function createWS() {
                     break;
                 case "del":
                     // console.log(data);
-                    rectangles.set(data.rect.id, data.rect);
+                    rectangles.delte(data.rect.id);
                     // console.log(rectangles);
                     break;
                 case "clear":
