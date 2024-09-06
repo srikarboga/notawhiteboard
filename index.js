@@ -84,7 +84,7 @@ function createWS() {
                     break;
                 case "del":
                     // console.log(data);
-                    rectangles.delte(data.rect.id);
+                    rectangles.delete(data.rect.id);
                     // console.log(rectangles);
                     break;
                 case "clear":
@@ -93,7 +93,7 @@ function createWS() {
                     // console.log(rectangles);
                     break;
                 case "initial":
-                    // console.log(data.rectangles);
+                    console.log(data.rectangles);
                     for (const key in data.rectangles) {
                         /* console.log(key);
                         console.log(data.rectangles[key]) */
@@ -308,12 +308,12 @@ document.addEventListener("keydown", function(e) {
         //send a message to the server with the current state
         /* let data = JSON.stringify(rectangles);
         ws.send(data); */
-        const bytes = new TextEncoder().encode(data).length;
-        totalSent += bytes;
+        //const bytes = new TextEncoder().encode(data).length;
+        //totalSent += bytes;
 
 
-        /* let data = JSON.stringify(new Msg("clear"));
-        ws.send(data); */
+        let data = JSON.stringify(new Msg("clear"));
+        ws.send(data);
         console.log("sent clear");
     }
 });
