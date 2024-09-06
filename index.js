@@ -25,6 +25,8 @@ let ws = createWS();
 function createWS() {
     let ws;
     try {
+        // uncomment this in production and comment localhost
+        // ws = new WebSocket("wss://notawhiteboard.com/ws");
         ws = new WebSocket("ws://localhost:8080/ws");
     } catch (error) {
         console.log("Websocket connection failed");
