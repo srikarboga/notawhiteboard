@@ -183,6 +183,7 @@ function drawRectangles() {
     ctx.fillText(`Bytes sent: ${totalSent}`, 10, 50);
     ctx.fillText(`Bytes received: ${totalReceived}`, 10, 70);
     ctx.fillText(`Connection status: ${conStatus}`, 10, 90);
+    ctx.fillText(`Left click to place or drag, right click to remove, 'R' to clear`, 10, 110);
 
     // Request the next animation frame
     window.requestAnimationFrame(drawRectangles);
