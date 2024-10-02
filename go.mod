@@ -1,4 +1,4 @@
-module github.com/srikarboga/lifeweaver.git
+module github.com/srikarboga/server
 
 go 1.22.5
 
